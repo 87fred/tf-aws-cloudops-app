@@ -1,0 +1,7 @@
+**/.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfstate.d/
+.vscode/
+node_modules/
+*.zip
