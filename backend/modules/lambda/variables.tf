@@ -10,3 +10,7 @@ variable "iam_role_arn" {
   description = "O ARN da role criada no repo de infra"
   type        = string
 }
+variable "dynamodb_table_name" {
+  description = "O nome da tabela do DynamoDB para ser injetado no Lambda"
+  type        = string
+}
