@@ -14,7 +14,7 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
 #3. Criar a rota (exemplo: GET /) que aponta para a lambda
 resource "aws_apigatewayv2_route" "default_route" {
   api_id    = aws_apigatewayv2_api.lambda_api.id
-  route_key = "ANY /"
+  route_key = "ANY /{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 }
 

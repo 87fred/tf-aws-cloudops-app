@@ -20,5 +20,6 @@ module "lambda_backend" {
   project_name = var.project_name
   workspace    = terraform.workspace
   iam_role_arn = module.iam_backend.lambda_role_arn
+  dynamodb_table_name = module.dynamodb_backend.table_name
 }
 
