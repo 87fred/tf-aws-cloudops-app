@@ -20,15 +20,15 @@ resource "aws_apigatewayv2_route" "default_route" {
 
 #4. Dá a permissão para o API gateway invocar o Lambda
 resource "aws_lambda_permission" "api_gtlambda" {
-    action = "lambda:InvokeFunction"
-    function_name = aws_lambda_function.backend_lambda.function_name
-    principal     = "apigateway.amazonaws.com"
-    source_arn = "${aws_apigatewayv2_api.lambda_api.execution_arn}/*/*"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.backend_lambda.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.lambda_api.execution_arn}/*/*"
 }
 
 #5. Cria um Stage para a API Gateway (Ambiente de publicação da API)
 resource "aws_apigatewayv2_stage" "default_stage" {
-    api_id = aws_apigatewayv2_api.lambda_api.id
-    name = "$default"
-    auto_deploy = true
+  api_id      = aws_apigatewayv2_api.lambda_api.id
+  name        = "$default"
+  auto_deploy = true
 }

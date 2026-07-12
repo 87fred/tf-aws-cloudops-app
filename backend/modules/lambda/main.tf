@@ -4,10 +4,10 @@ resource "aws_lambda_function" "backend_lambda" {
   handler       = "main.handler"
   runtime       = "python3.11"
 
-# Apenas apontamos para onde o arquivo ESTARÁ. 
+  # Apenas apontamos para onde o arquivo ESTARÁ. 
   # O Terraform não vai falhar se ele ainda não existir, 
   # a menos que você tente rodar o 'apply'.
-  filename      = data.archive_file.lambda_zip.output_path
+  filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   environment {
@@ -19,6 +19,6 @@ resource "aws_lambda_function" "backend_lambda" {
 # Cria o arquivo ZIP automaticamente a partir do código Python
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file  = "${path.module}/main.py"
+  source_file = "${path.module}/main.py"
   output_path = "${path.module}/lambda_functions.zip"
 }
