@@ -10,7 +10,7 @@ resource "aws_lambda_function" "backend_lambda" {
 
   environment {
     variables = {
-      ENVIRONMENT = terraform.workspace
+      ENVIRONMENT    = terraform.workspace
       DYNAMODB_TABLE = var.dynamodb_table_name
     }
   }
