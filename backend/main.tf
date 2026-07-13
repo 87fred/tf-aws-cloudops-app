@@ -28,3 +28,10 @@ module "s3" {
   source      = "./modules/s3"
   bucket_name = var.bucket_name
 }
+
+#5. Orquestra a criação do CloudFront para entregar o frontend
+module "cloudfront" {
+  source      = "./modules/cloudfront"
+  bucket_name = module.s3.bucket_name
+  bucket_arn  = module.s3.bucket_arn
+}

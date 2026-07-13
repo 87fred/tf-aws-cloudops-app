@@ -5,3 +5,4 @@ terraform.tfstate.d/
 .vscode/
 node_modules/
 *.zip
+frontend/
