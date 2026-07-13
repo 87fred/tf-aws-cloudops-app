@@ -1,6 +1,7 @@
 
 resource "aws_s3_bucket" "frontend_bucket" {
- bucket = var.bucket_name 
+  bucket = var.bucket_name
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "frontend_bucket_public_access_block" {
@@ -13,12 +14,12 @@ resource "aws_s3_bucket_public_access_block" "frontend_bucket_public_access_bloc
 }
 
 resource "null_resource" "sync_files" {
-    triggers = {
-        bucket_id = aws_s3_bucket.frontend_bucket.id
-    }
+  triggers = {
+    bucket_id  = aws_s3_bucket.frontend_bucket.id
+    files_hash = sha1(join("", [for f in fileset("../../frontend/", "*") : filesha1("../../frontend/${f}")]))
+  }
 
-
-provisioner "local-exec" {
-        command = "aws s3 sync ../frontend/dist s3://${aws_s3_bucket.frontend_bucket.id} --delete"
-    }
+  provisioner "local-exec" {
+    command = "aws s3 sync ../frontend/ s3://${aws_s3_bucket.frontend_bucket.bucket} --delete"
+  }
 }
