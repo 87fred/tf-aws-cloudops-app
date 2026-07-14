@@ -2,6 +2,13 @@
 resource "aws_apigatewayv2_api" "lambda_api" {
   name          = "${var.project_name}-${var.workspace}-api"
   protocol_type = "HTTP"
+  cors_configuration {
+    allow_headers = ["*"]
+    allow_methods = ["POST", "GET", "OPTIONS", "PUT", "DELETE"]
+    allow_origins = ["*"]
+    max_age      = 3600
+  }
+
 }
 
 # 2. Criar a integração com a função Lambda

@@ -50,3 +50,58 @@ resource "aws_iam_role_policy_attachment" "lambda_dynamodb_policy_attachment" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_dynamodb_policy.arn
 }
+
+#Política para leitura dos serviços provisionados na infraestrutura
+resource "aws_iam_policy" "lambda_dashboard_policy" {
+  name        = "${var.project_name}-${terraform.workspace}-lambda-dashboard-policy"
+  description = "Permissões para o dashboard de observabilidade (cloudwatch, s3, dynamodb, sns, sqs, etc.)"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          # Compute & Orchestration
+          "ec2:DescribeInstances",
+          "ec2:DescribeVpcs",
+          "ec2:DescribeSubnets",
+          "ecs:ListClusters",
+          "ecs:DescribeClusters",
+          "ecs:ListServices",
+          "ecs:DescribeServices",
+          "ecs:ListTasks",
+          "lambda:ListFunctions",
+
+          # Databases
+          "rds:DescribeDBInstances",
+          "dynamodb:ListTables",
+
+          # Storage & Networking
+          "s3:ListAllMyBuckets",
+          "elasticloadbalancing:DescribeLoadBalancers",
+          "elasticloadbalancing:DescribeLoadBalancerAttributes",
+          "elasticloadbalancing:DescribeTargetGroups",
+          "elasticloadbalancing:DescribeTargetHealth",
+
+          # Observability (Monitoramento)
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:ListMetrics",
+          "cloudwatch:GetMetricData",
+
+          # FinOps (Custos)
+          "ce:GetCostAndUsage",
+
+          # IAM
+          "iam:ListRoles"
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+#anexando a policy a mesma role da lambda
+resource "aws_iam_role_policy_attachment" "lambda_dashboard_policy_attachment" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_dashboard_policy.arn
+}
