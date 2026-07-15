@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-950 text-white font-sans">
+
+<div class="flex h-screen">
+    <aside class="w-64 bg-gray-900 border-r border-gray-800 p-6">
+        <h1 class="text-xl font-bold text-blue-500 mb-10">CloudOps Console</h1>
+        <nav class="space-y-4">
+            <a href="dashboard.html" class="block p-2 hover:text-blue-400">📊 Dashboard</a>
+            <a href="infrastructure.html" class="block p-2 hover:text-blue-400">🏗️ Infrastructure</a>
+            <a href="monitoring.html" class="block p-2 bg-gray-800 rounded">📈 Monitoring</a>
+            <a href="costs.html" class="block p-2 hover:text-blue-400">💰 Costs</a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+        <h2 class="text-2xl font-bold mb-6">Central de Observabilidade</h2>
+
+        <!-- Grid de Métricas em tempo real -->
+        <div class="grid grid-cols-4 gap-6 mb-8">
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <h3 class="text-gray-400 text-xs">CPU</h3>
+                <p class="text-xl font-bold">18%</p>
+            </div>
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <h3 class="text-gray-400 text-xs">Latência</h3>
+                <p class="text-xl font-bold">45ms</p>
+            </div>
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <h3 class="text-gray-400 text-xs">Requests</h3>
+                <p class="text-xl font-bold">320/min</p>
+            </div>
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <h3 class="text-gray-400 text-xs">Erros (5xx)</h3>
+                <p class="text-xl font-bold text-red-500">0</p>
+            </div>
+        </div>
+
+        <!-- Gráficos Principais -->
+        <div class="grid grid-cols-2 gap-6 mb-8">
+            <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 h-64"><canvas id="netChart"></canvas></div>
+            <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 h-64"><canvas id="reqChart"></canvas></div>
+        </div>
+
+        <!-- Tabela de Serviços -->
+        <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
+            <h3 class="text-lg font-bold mb-4">Serviços Monitorados</h3>
+            <table class="w-full text-left text-sm">
+                <thead><tr class="text-gray-400 border-b border-gray-800"><th>Serviço</th><th>CPU</th><th>Memory</th><th>Reqs/min</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr class="border-b border-gray-800"><td>API Gateway</td><td>18%</td><td>—</td><td>320</td><td class="text-green-500">Online</td></tr>
+                    <tr class="border-b border-gray-800"><td>Lambda Login</td><td>24%</td><td>140 MB</td><td>180</td><td class="text-green-500">Running</td></tr>
+                    <tr class="border-b border-gray-800"><td>ECS Frontend</td><td>42%</td><td>55%</td><td>980</td><td class="text-green-500">Healthy</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script>
+    const chartConfig = (id, label, color, data) => new Chart(document.getElementById(id).getContext('2d'), {
+        type: 'line',
+        data: { labels: ['0', '1', '2', '3', '4'], datasets: [{ label, data, borderColor: color, fill: false, tension: 0.4 }] },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+    chartConfig('netChart', 'Network In (Mbps)', '#10b981', [120, 150, 130, 170, 200]);
+    chartConfig('reqChart', 'Requests por Minuto', '#8b5cf6', [800, 950, 900, 1100, 980]);
+</script>
+</body>
+</html>
