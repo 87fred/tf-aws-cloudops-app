@@ -46,21 +46,21 @@ const CONFIG = {
 EOT
 }
 
+# 7. Sincroniza os arquivos do frontend de forma consistente
 resource "null_resource" "sync_files" {
-  depends_on = [local_file.frontend_config]
+  # Garante que o upload só ocorra depois que o config.js for gravado e o S3 estiver pronto
+  depends_on = [
+    local_file.frontend_config,
+    module.s3
+  ]
 
+  # Força a execução sempre que o conteúdo do config.js mudar ou o bucket for recriado
   triggers = {
-    bucket_id = module.s3.bucket_name
-
-    # Ajustado para mapear de forma recursiva (**) e evitar o conflito de consistência
-    files_hash = sha1(join("", [
-      for f in fileset("${path.module}/../frontend", "**/*") :
-      filesha1("${path.module}/../frontend/${f}")
-      if f != "config.js" # Evita que a geração do próprio config.js confunda o Terraform
-    ]))
+    bucket_id   = module.s3.bucket_name
+    config_hash = md5(local_file.frontend_config.content)
   }
 
   provisioner "local-exec" {
-    command = "aws s3 sync ../frontend/ s3://${module.s3.bucket_name} --delete"
+    command = "aws s3 sync ./../frontend s3://${module.s3.bucket_name} --delete"
   }
 }

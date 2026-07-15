@@ -6,7 +6,7 @@ resource "aws_apigatewayv2_api" "lambda_api" {
     allow_headers = ["*"]
     allow_methods = ["POST", "GET", "OPTIONS", "PUT", "DELETE"]
     allow_origins = ["*"]
-    max_age      = 3600
+    max_age       = 3600
   }
 
 }

@@ -8,12 +8,9 @@ ec2 = boto3.client('ec2')
 ecs = boto3.client('ecs')
 rds = boto3.client('rds')
 ce = boto3.client('ce')
-
-# Inicializa o DynamoDB para persistência de usuários
 dynamodb = boto3.resource('dynamodb')
 
-# Captura o nome da tabela injetada por variável de ambiente no Lambda
-# ATENÇÃO: Alterado de 'DYNAMODB_TABLE_NAME' para 'DYNAMODB_TABLE' para bater com o Terraform
+# Tabela do DynamoDB
 TABLE_NAME = os.environ.get('DYNAMODB_TABLE')
 table = dynamodb.Table(TABLE_NAME) if TABLE_NAME else None
 
@@ -40,21 +37,27 @@ def get_rds_summary():
 
 def get_cost_data():
     try:
-        today = datetime.now().strftime('%Y-%m-%d')
-        start_of_month = datetime.now().replace(day=1).strftime('%Y-%m-%d')
+        today = datetime.now()
+        today_str = today.strftime('%Y-%m-%d')
+        start_of_month = today.replace(day=1).strftime('%Y-%m-%d')
         
         response = ce.get_cost_and_usage(
-            TimePeriod={'Start': start_of_month, 'End': today},
+            TimePeriod={'Start': start_of_month, 'End': today_str},
             Granularity='MONTHLY',
             Metrics=['UnblendedCost']
         )
-        amount = response['ResultsByTime'][0]['Total']['UnblendedCost']['Amount']
-        return float(amount)
+        amount = float(response['ResultsByTime'][0]['Total']['UnblendedCost']['Amount'])
+        
+        # Cálculo da projeção baseada na média diária
+        dias_passados = today.day
+        dias_no_mes = 31 
+        projeção = (amount / dias_passados) * dias_no_mes
+        
+        return {"current": amount, "projection": projeção}
     except Exception:
-        return 0.0
+        return {"current": 0.0, "projection": 0.0}
 
 def build_response(status_code, body_data):
-    """Auxiliar para gerar a resposta com cabeçalhos de CORS consistentes"""
     return {
         'statusCode': status_code,
         'headers': {
@@ -68,80 +71,55 @@ def build_response(status_code, body_data):
 
 def handler(event, context):
     try:
-        # Extrai o caminho (path) e o método da requisição do API Gateway v2
-        path = event.get('rawPath', event.get('path', '/'))
+        raw_path = event.get('rawPath', event.get('path', '/'))
+        path = "/" + raw_path.strip("/")
         method = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
         
-        # ----------------------------------------------------
+        if not event.get('rawPath'): 
+            method = event.get('httpMethod', method)
+
         # ROTA: POST /register
-        # ----------------------------------------------------
-        if path == "/register" and method == "POST":
-            if not table:
-                return build_response(500, {"erro": "Tabela DynamoDB não configurada no Lambda."})
-            
+        if path.endswith("/register") and method == "POST":
             body = json.loads(event.get('body', '{}'))
-            username = body.get('username')
-            password = body.get('password') # Nota: Em produção, aplique hash na senha!
-            
-            if not username or not password:
+            if not body.get('username') or not body.get('password'):
                 return build_response(400, {"erro": "Username e senha são obrigatórios."})
             
-            # Verifica se o usuário já existe no DynamoDB
-            response = table.get_item(Key={'username': username})
-            if 'Item' in response:
+            if 'Item' in table.get_item(Key={'username': body.get('username')}):
                 return build_response(400, {"erro": "Usuário já cadastrado."})
             
-            # Registra novo usuário
-            table.put_item(Item={'username': username, 'password': password})
-            return build_response(201, {"mensagem": "Cadastro realizado com sucesso!"})
+            table.put_item(Item={'username': body.get('username'), 'password': body.get('password')})
+            return build_response(201, {"mensagem": "Cadastro realizado!"})
             
-        # ----------------------------------------------------
         # ROTA: POST /login
-        # ----------------------------------------------------
-        elif path == "/login" and method == "POST":
-            if not table:
-                return build_response(500, {"erro": "Tabela DynamoDB não configurada no Lambda."})
-                
+        elif path.endswith("/login") and method == "POST":
             body = json.loads(event.get('body', '{}'))
-            username = body.get('username')
-            password = body.get('password')
-            
-            if not username or not password:
-                return build_response(400, {"erro": "Username e senha são obrigatórios."})
-                
-            # Busca usuário no DynamoDB
-            response = table.get_item(Key={'username': username})
-            user_data = response.get('Item')
-            
-            if not user_data or user_data.get('password') != password:
-                return build_response(401, {"erro": "Credenciais inválidas. Usuário ou senha incorretos."})
-            
-            # Login bem-sucedido: retorna um token mockado
-            return build_response(200, {
-                "mensagem": "Login efetuado com sucesso!",
-                "token_fake": f"token-valido-para-{username}"
-            })
+            user = table.get_item(Key={'username': body.get('username')}).get('Item')
+            if not user or user.get('password') != body.get('password'):
+                return build_response(401, {"erro": "Credenciais inválidas."})
+            return build_response(200, {"token": f"token-valido-para-{body.get('username')}"})
 
-        # ----------------------------------------------------
-        # ROTA DEFAULT (Dashboard / Obter Métricas da AWS)
-        # ----------------------------------------------------
-        else:
+        # ROTA: GET /api/summary
+        elif path.endswith("/api/summary") and method == "GET":
             data = {
-                "summary": {
-                    "ec2_count": get_ec2_summary(),
-                    "ecs_count": get_ecs_summary(),
-                    "rds_count": get_rds_summary(),
-                    "current_month_cost": get_cost_data(),
-                    "status": "Healthy",
-                    "last_sync": datetime.now().isoformat()
+                "health": {
+                    "overall": "98%",
+                    "cpu_avg": "34%",
+                    "mem_avg": "52%",
+                    "availability": "99.99%"
                 },
-                "distribution": [
-                    {"label": "EC2", "value": get_ec2_summary()},
-                    {"label": "ECS", "value": get_ecs_summary()},
-                    {"label": "RDS", "value": get_rds_summary()}
-                ]
+                "distribution": {
+                    "ec2": get_ec2_summary(),
+                    "ecs": get_ecs_summary(),
+                    "rds": get_rds_summary()
+                },
+                "cost": get_cost_data(),
+                "last_update": datetime.now().isoformat()
             }
             return build_response(200, data)
+
+        # ROTA DEFAULT
+        else:
+            return build_response(200, {"status": "API Online", "version": "1.0"})
             
     except Exception as e:
         return build_response(500, {"error": str(e)})
