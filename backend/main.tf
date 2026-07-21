@@ -64,3 +64,15 @@ resource "null_resource" "sync_files" {
     command = "aws s3 sync ./../frontend s3://${module.s3.bucket_name} --delete"
   }
 }
+
+# -----------------------------------------------------------------------------
+# Instancia o Módulo de CloudWatch e Observabilidade
+# -----------------------------------------------------------------------------
+module "cloudwatch_monitoring" {
+  source = "./modules/cloudwatch"
+
+  project_name               = "cloudops-app"
+  lambda_function_name       = "var.lambda_function_name"
+  retention_in_days          = 14
+  cloudfront_distribution_id = "var.cloudfront_distribution_id"
+}
