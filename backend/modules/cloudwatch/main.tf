@@ -43,7 +43,7 @@ resource "aws_cloudwatch_dashboard" "lambda_dashboard" {
           view    = "timeSeries"
           stacked = false
           region  = "us-east-1"
-          title   = "Erros e Invocacoes - Lambda"
+          title   = "Erros e Chamadas - Lambda"
           period  = 60
         }
       },
@@ -55,12 +55,12 @@ resource "aws_cloudwatch_dashboard" "lambda_dashboard" {
         height = 6
         properties = {
           metrics = [
-            ["AWS/Lambda", "Duration", "FunctionName", var.lambda_function_name]
+            ["AWS/Lambda", "Duração", "FunctionName", var.lambda_function_name]
           ],
           view    = "timeSeries"
           stacked = false
           region  = "us-east-1"
-          title   = "Latencia (Duration) - Lambda"
+          title   = "Latência - Lambda (Duração)"
           period  = 60
           stat    = "Average"
         }
@@ -70,7 +70,7 @@ resource "aws_cloudwatch_dashboard" "lambda_dashboard" {
 }
 
 # -----------------------------------------------------------------------------
-# 2. Dashboard de Infraestrutura e Conectividade (CloudFront / Borda)
+# 2. Dashboard de Infraestrutura e Conectividade (CloudFront)
 # -----------------------------------------------------------------------------
 resource "aws_cloudwatch_dashboard" "edge_dashboard" {
   dashboard_name = "${var.project_name}-edge-infrastructure-dashboard"
@@ -85,14 +85,14 @@ resource "aws_cloudwatch_dashboard" "edge_dashboard" {
         height = 6
         properties = {
           metrics = [
-            ["AWS/CloudFront", "Requests", "DistributionId", var.cloudfront_distribution_id],
-            [".", "BytesDownloaded", ".", "."],
-            [".", "BytesUploaded", ".", "."]
+            ["AWS/CloudFront", "Requisições", "DistributionId", var.cloudfront_distribution_id],
+            [".", "Download", ".", "."],
+            [".", "Upload", ".", "."]
           ],
           view    = "timeSeries"
           stacked = false
           region  = "us-east-1"
-          title   = "Requisicoes e Trafego - CloudFront"
+          title   = "Requisições e Tráfego - CloudFront"
           period  = 300
         }
       },
@@ -104,9 +104,9 @@ resource "aws_cloudwatch_dashboard" "edge_dashboard" {
         height = 6
         properties = {
           metrics = [
-            ["AWS/CloudFront", "TotalErrorRate", "DistributionId", var.cloudfront_distribution_id],
-            [".", "5xxErrorRate", ".", "."],
-            [".", "4xxErrorRate", ".", "."]
+            ["AWS/CloudFront", "Taxa de Erros Totais", "DistributionId", var.cloudfront_distribution_id],
+            [".", "Erros 5xx", ".", "."],
+            [".", "Erros 4xx", ".", "."]
           ],
           view    = "timeSeries"
           stacked = false
@@ -136,7 +136,7 @@ resource "aws_cloudwatch_dashboard" "finops_dashboard" {
         height = 6
         properties = {
           metrics = [
-            ["AWS/Billing", "EstimatedCharges", "Currency", "USD"]
+            ["AWS/Billing", "Custos Estimados", "Currency", "USD"]
           ],
           view    = "timeSeries"
           stacked = false
