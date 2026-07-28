@@ -1,24 +1,36 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
 </head>
-<body class="bg-gray-950 text-white font-sans">
+<body class="bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-white font-sans transition-colors duration-300">
 
-<header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center sticky top-0 z-50">
+    <button id="theme-toggle" class="absolute top-4 right-4 p-2.5 rounded-full bg-slate-200 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:bg-slate-300 dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-sm border dark:border-zinc-800 z-50">
+        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+        </svg>
+    </button>
+
+<header class="bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800 p-4 flex justify-between items-center sticky top-0 z-40 transition-colors duration-300">
     <h1 class="text-xl font-bold text-blue-500">CloudOps Console</h1>
     <div class="relative w-96">
-        <input type="text" placeholder="Pesquisar recursos (EC2, Lambda, RDS...)" class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
+        <input id="search-input" type="text" placeholder="Pesquisar recursos (EC2, Lambda, RDS...)" class="w-full bg-slate-100 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
     </div>
-    <div class="text-xs text-gray-400">fred@admin</div>
+    <div class="text-xs text-slate-500 dark:text-gray-400 mr-12">fred@admin</div>
 </header>
 
 <div class="flex h-screen">
-    <aside class="w-64 bg-gray-900 border-r border-gray-800 p-6">
+    <aside class="w-64 bg-white dark:bg-gray-900 border-r border-slate-200 dark:border-gray-800 p-6 transition-colors duration-300">
         <nav class="space-y-4">
             <a href="dashboard.html" class="block p-2 hover:text-blue-400">📊 Dashboard</a>
-            <a href="infrastructure.html" class="block p-2 bg-gray-800 rounded">🏗️ Infrastructure</a>
+            <a href="infrastructure.html" class="block p-2 bg-slate-100 dark:bg-gray-800 rounded font-medium">🏗️ Infrastructure</a>
             <a href="monitoring.html" class="block p-2 hover:text-blue-400">📈 Monitoring</a>
             <a href="costs.html" class="block p-2 hover:text-blue-400">💰 Costs</a>
         </nav>
@@ -27,22 +39,110 @@
     <main class="flex-1 p-8 overflow-y-auto">
         <h2 class="text-2xl font-bold mb-6">Infrastructure Inventory</h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800"><h3 class="text-gray-400 text-xs uppercase">Total Recursos</h3><p class="text-2xl font-bold">12</p></div>
-            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800"><h3 class="text-gray-400 text-xs uppercase">Healthy</h3><p class="text-2xl font-bold text-green-500">10</p></div>
-            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800"><h3 class="text-gray-400 text-xs uppercase">Warnings</h3><p class="text-2xl font-bold text-yellow-500">2</p></div>
-            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800"><h3 class="text-gray-400 text-xs uppercase">Regiões</h3><p class="text-2xl font-bold">us-east-1</p></div>
+            <div class="bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs uppercase">Total Recursos Reais</h3><p id="total-resources" class="text-2xl font-bold">0</p></div>
+            <div class="bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs uppercase">Healthy</h3><p class="text-2xl font-bold text-green-500">Online</p></div>
+            <div class="bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs uppercase">Warnings</h3><p class="text-2xl font-bold text-yellow-500">0</p></div>
+            <div class="bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs uppercase">Região</h3><p class="text-2xl font-bold">us-east-1</p></div>
         </div>
-        <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold">Recursos Provisionados</h3><button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition">+ Novo Recurso</button></div>
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold">Recursos Provisionados na AWS</h3></div>
             <table class="w-full text-left text-sm">
-                <thead><tr class="text-gray-400 border-b border-gray-800"><th class="pb-3">Nome / ID</th><th class="pb-3">Tipo</th><th class="pb-3">Status</th><th class="pb-3">Região</th><th class="pb-3">Ações</th></tr></thead>
-                <tbody class="text-gray-300">
-                    <tr class="border-b border-gray-800 hover:bg-gray-800/50"><td class="py-4">i-0ab123456789</td><td>EC2 (t3.micro)</td><td><span class="text-green-500">● Running</span></td><td>us-east-1a</td><td><button class="text-blue-400 hover:underline">Detalhes</button></td></tr>
-                    <tr class="border-b border-gray-800 hover:bg-gray-800/50"><td class="py-4">ecs-cluster-prod</td><td>ECS Cluster</td><td><span class="text-green-500">● Active</span></td><td>us-east-1</td><td><button class="text-blue-400 hover:underline">Detalhes</button></td></tr>
+                <thead><tr class="text-slate-400 dark:text-gray-400 border-b border-slate-200 dark:border-gray-800"><th class="pb-3">Tipo de Recurso</th><th class="pb-3">Quantidade Ativa</th><th class="pb-3">Status</th><th class="pb-3">Região</th></tr></thead>
+                <tbody id="infra-tbody" class="text-slate-600 dark:text-gray-300">
+                    <tr><td colspan="4" class="py-4 text-center text-slate-400 dark:text-gray-500">Carregando inventário real...</td></tr>
                 </tbody>
             </table>
         </div>
     </main>
 </div>
+<script src="config.js"></script>
+<script>
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const darkIcon = document.getElementById('theme-toggle-dark-icon');
+    const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+    if (localStorage.getItem('color-theme') === 'light') {
+        document.documentElement.classList.remove('dark');
+        darkIcon.classList.remove('hidden');
+    } else {
+        document.documentElement.classList.add('dark');
+        lightIcon.classList.remove('hidden');
+    }
+
+    themeToggleBtn.addEventListener('click', function() {
+        darkIcon.classList.toggle('hidden');
+        lightIcon.classList.toggle('hidden');
+
+        if (document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('color-theme', 'light');
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('color-theme', 'dark');
+        }
+    });
+
+    async function loadInfra() {
+        try {
+            const res = await fetch(`${CONFIG.API_URL}/api/summary`);
+            const data = await res.json();
+            const dist = data.distribution;
+            
+            const tbody = document.getElementById('infra-tbody');
+            tbody.innerHTML = '';
+
+            let total = dist.ec2 + dist.ecs + dist.rds;
+            document.getElementById('total-resources').innerText = total + 2;
+
+            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">AWS Lambda (Backend)</td><td>1</td><td><span class="text-green-500">● Active</span></td><td>us-east-1</td></tr>`;
+            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">API Gateway (HTTP)</td><td>1</td><td><span class="text-green-500">● Active</span></td><td>us-east-1</td></tr>`;
+            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">Amazon EC2</td><td>${dist.ec2}</td><td><span class="${dist.ec2 > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${dist.ec2 > 0 ? 'Running' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
+            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">ECS Cluster</td><td>${dist.ecs}</td><td><span class="${dist.ecs > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${dist.ecs > 0 ? 'Active' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
+            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">Amazon RDS</td><td>${dist.rds}</td><td><span class="${dist.rds > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${dist.rds > 0 ? 'Available' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
+        
+            initSearch();
+        } catch (e) {
+            console.error("Erro ao carregar infra", e);
+        }
+    }
+
+    function initSearch() {
+        const searchInput = document.getElementById('search-input');
+        const tbody = document.getElementById('infra-tbody');
+        
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = tbody.querySelectorAll('tr:not(#no-results-row)');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                if (text.includes(term)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            let noResultRow = document.getElementById('no-results-row');
+            if (visibleCount === 0 && term.trim() !== '') {
+                if (!noResultRow) {
+                    noResultRow = document.createElement('tr');
+                    noResultRow.id = 'no-results-row';
+                    noResultRow.innerHTML = `<td colspan="4" class="py-6 text-center text-slate-400 dark:text-gray-500 italic">⚠️ Nenhum recurso correspondente a "${e.target.value}" está provisionado no ambiente.</td>`;
+                    tbody.appendChild(noResultRow);
+                } else {
+                    noResultRow.cells[0].innerText = `⚠️ Nenhum recurso correspondente a "${e.target.value}" está provisionado no ambiente.`;
+                    noResultRow.style.display = '';
+                }
+            } else if (noResultRow) {
+                noResultRow.style.display = 'none';
+            }
+        });
+    }
+
+    loadInfra();
+</script>
 </body>
 </html>
