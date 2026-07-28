@@ -14,7 +14,7 @@ build-lambda:
 # O 'apply' agora depende de 'build-lambda'
 # Sempre que você rodar 'make apply', ele zipa o código antes
 apply: build-lambda
-	terraform apply $(VARS)
+	terraform apply $(VARS) -auto-approve
 
 plan:
 	terraform plan $(VARS)

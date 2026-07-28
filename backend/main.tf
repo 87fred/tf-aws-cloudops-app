@@ -71,8 +71,8 @@ resource "null_resource" "sync_files" {
 module "cloudwatch_monitoring" {
   source = "./modules/cloudwatch"
 
-  project_name               = "cloudops-app"
-  lambda_function_name       = "var.lambda_function_name"
+  project_name               = var.project_name
+  lambda_function_name       = module.lambda_backend.function_name
   retention_in_days          = 14
-  cloudfront_distribution_id = "var.cloudfront_distribution_id"
+  cloudfront_distribution_id = module.cloudfront.cloudfront_distribution_id
 }

@@ -1,7 +1,7 @@
 resource "aws_lambda_function" "backend_lambda" {
   function_name = "${var.project_name}-${terraform.workspace}-backend"
   role          = var.iam_role_arn
-  handler       = "main.handler"
+  handler       = "main.lambda_handler"
   runtime       = "python3.11"
 
 
@@ -11,7 +11,7 @@ resource "aws_lambda_function" "backend_lambda" {
   environment {
     variables = {
       ENVIRONMENT    = terraform.workspace
-      DYNAMODB_TABLE = var.dynamodb_table_name
+      DYNAMODB_TABLE = "${var.project_name}-${terraform.workspace}-users"
     }
   }
 }
