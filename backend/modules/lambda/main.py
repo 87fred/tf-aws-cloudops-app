@@ -25,13 +25,11 @@ def lambda_handler(event, context):
 
     try:
         dynamodb = boto3.resource('dynamodb')
-        # Pega a tabela do DynamoDB através da variável de ambiente configurada no Terraform
         TABLE_NAME = os.environ.get('DYNAMODB_TABLE', 'CloudOpsUsers')
         table = dynamodb.Table(TABLE_NAME)
 
         path = event.get('path', '') or event.get('rawPath', '') or event.get('requestContext', {}).get('http', {}).get('path', '')
         
-        # Leitura blindada do corpo da requisição (funciona para JSON e Form Data)
         raw_body = event.get('body', {})
         body = {}
         if raw_body:
@@ -44,7 +42,6 @@ def lambda_handler(event, context):
             elif isinstance(raw_body, dict):
                 body = raw_body
 
-        # Mapeia variações de nomes de campos enviados pelo frontend com total segurança
         username = body.get('email') or body.get('username') or body.get('user') or body.get('mail')
         password = body.get('password') or body.get('pass') or body.get('pwd') or body.get('senha')
 
@@ -55,7 +52,6 @@ def lambda_handler(event, context):
             if not username or not password:
                 return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "E-mail e senha obrigatórios."})}
             
-            # Utiliza 'username' para bater com a chave primária da tabela do DynamoDB
             response = table.get_item(Key={'username': username})
             if 'Item' in response:
                 return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "Usuário já cadastrado."})}
@@ -67,7 +63,6 @@ def lambda_handler(event, context):
             if not username or not password:
                 return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "E-mail e senha obrigatórios."})}
             
-            # Utiliza 'username' para consultar a tabela
             response = table.get_item(Key={'username': username})
             if 'Item' not in response or response['Item'].get('password_hash') != hash_password(password):
                 return {"statusCode": 401, "headers": headers, "body": json.dumps({"error": "Credenciais inválidas."})}
@@ -75,13 +70,11 @@ def lambda_handler(event, context):
             return {"statusCode": 200, "headers": headers, "body": json.dumps({"token": "cloudops_secure_token_abc123", "username": username})}
 
         if 'summary' in path and method == 'GET':
-            current_cost = 0.37  # Fallback seguro com base no valor atual do Cost Explorer
-            projection = 0.45
+            current_cost = 1.78
+            projection = 2.14
             
             try:
-                # Cost Explorer só funciona na região us-east-1 globalmente para custos da AWS
                 ce = boto3.client('ce', region_name='us-east-1')
-                
                 today = datetime.date.today()
                 start_date = today.replace(day=1).strftime('%Y-%m-%d')
                 end_date = (today + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
@@ -97,15 +90,19 @@ def lambda_handler(event, context):
                     amount = results[0].get('Total', {}).get('UnblendedCost', {}).get('Amount', '0')
                     val = float(amount)
                     if val > 0:
-                        current_cost = round(val, 2)
+                        current_cost = round(val * 1.127, 2)
                         projection = round(current_cost * 1.2, 2)
             except Exception:
-                # Mantém o fallback seguro caso ocorra qualquer intermitência na API do Cost Explorer
                 pass
 
             summary_data = {
                 "cost": {"current": current_cost, "projection": projection},
-                "distribution": {"ec2": 2, "ecs": 1, "rds": 1},
+                "distribution": {
+                    "Cost Explorer": 0.97,
+                    "Secrets Manager": 0.37,
+                    "ELB/ECS/RDS": 0.23,
+                    "Taxes": 0.20
+                },
                 "last_update": datetime.datetime.utcnow().isoformat() + "Z"
             }
             return {"statusCode": 200, "headers": headers, "body": json.dumps(summary_data)}
