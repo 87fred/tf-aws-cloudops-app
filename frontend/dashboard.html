@@ -1,26 +1,37 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style type="text/tailwindcss">
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
 </head>
-<body class="bg-gray-950 text-white font-sans">
+<body class="bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-white font-sans transition-colors duration-300">
 
-    <!-- 1. Header Global com Busca -->
-    <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center sticky top-0 z-50">
+    <button id="theme-toggle" class="absolute top-4 right-4 p-2.5 rounded-full bg-slate-200 dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:bg-slate-300 dark:hover:bg-zinc-800 transition-colors cursor-pointer shadow-sm border dark:border-zinc-800 z-50">
+        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+        </svg>
+    </button>
+
+    <header class="bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800 p-4 flex justify-between items-center sticky top-0 z-40 transition-colors duration-300">
         <h1 class="text-xl font-bold text-blue-500">CloudOps Console</h1>
         <div class="relative w-96">
-            <input type="text" placeholder="Pesquisar recursos (EC2, Lambda, RDS...)" 
-                   class="w-full bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
+            <input id="search-input" type="text" placeholder="Pesquisar status (API, Lambda, DynamoDB...)" 
+                   class="w-full bg-slate-100 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition">
         </div>
-        <div class="text-xs text-gray-400">fred@admin</div>
+        <div class="text-xs text-slate-500 dark:text-gray-400 mr-12">fred@admin</div>
     </header>
 
 <div class="flex h-screen">
-    <aside class="w-64 bg-gray-900 border-r border-gray-800 p-6">
+    <aside class="w-64 bg-white dark:bg-gray-900 border-r border-slate-200 dark:border-gray-800 p-6 transition-colors duration-300">
         <nav class="space-y-4">
-            <a href="dashboard.html" class="block p-2 bg-gray-800 rounded">📊 Dashboard</a>
+            <a href="dashboard.html" class="block p-2 bg-slate-100 dark:bg-gray-800 rounded font-medium">📊 Dashboard</a>
             <a href="infrastructure.html" class="block p-2 hover:text-blue-400">🏗️ Infrastructure</a>
             <a href="monitoring.html" class="block p-2 hover:text-blue-400">📈 Monitoring</a>
             <a href="costs.html" class="block p-2 hover:text-blue-400">💰 Costs</a>
@@ -28,55 +39,134 @@
     </aside>
 
     <main class="flex-1 p-8 overflow-y-auto">
-        
-        <!-- 2. Infrastructure Health (Novo) -->
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
-            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 flex items-center gap-3">
-                <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                <div><p class="text-[10px] text-gray-500 uppercase">EC2</p><p class="text-xs font-bold">Running</p></div>
+        <div id="status-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 flex items-center gap-3 transition-colors">
+                <div id="api-indicator" class="w-3 h-3 rounded-full bg-gray-500"></div>
+                <div><p class="text-[10px] text-slate-400 uppercase">API Gateway</p><p id="api-status" class="text-sm font-bold text-gray-400">Carregando...</p></div>
             </div>
-            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 flex items-center gap-3">
-                <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                <div><p class="text-[10px] text-gray-500 uppercase">ECS</p><p class="text-xs font-bold">Healthy</p></div>
+            <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 flex items-center gap-3 transition-colors">
+                <div id="lambda-indicator" class="w-3 h-3 rounded-full bg-gray-500"></div>
+                <div><p class="text-[10px] text-slate-400 uppercase">AWS Lambda</p><p id="lambda-status" class="text-sm font-bold text-gray-400">Carregando...</p></div>
             </div>
-            <div class="bg-gray-900 p-3 rounded-xl border border-gray-800 flex items-center gap-3">
-                <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-                <div><p class="text-[10px] text-gray-500 uppercase">Lambda</p><p class="text-xs font-bold">Degraded</p></div>
+            <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 flex items-center gap-3 transition-colors">
+                <div id="db-indicator" class="w-3 h-3 rounded-full bg-gray-500"></div>
+                <div><p class="text-[10px] text-slate-400 uppercase">DynamoDB</p><p id="db-status" class="text-sm font-bold text-gray-400">Carregando...</p></div>
+            </div>
+            <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 flex items-center gap-3 transition-colors">
+                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                <div><p class="text-[10px] text-slate-400 uppercase">Custo Atual</p><p id="dash-cost" class="text-sm font-bold text-blue-500">...</p></div>
             </div>
         </div>
 
-        <!-- Cards Superiores (Originais mantidos) -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-             <!-- ... seus cards originais de CPU/Mem/Disp ... -->
+        <div id="no-search-results" class="hidden p-6 mb-8 text-center text-slate-400 dark:text-gray-500 italic bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800">
+            ⚠️ Nenhum recurso ou métrica correspondente a "<span id="search-term-display"></span>" está provisionado no ambiente.
         </div>
 
-        <!-- Linha de Gráficos -->
-        <div class="grid grid-cols-3 gap-6 mb-8">
-             <!-- ... seus gráficos originais ... -->
-        </div>
-
-        <!-- 3. Activity Feed e Quick Actions (Substituindo a tabela antiga) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-gray-900 p-6 rounded-xl border border-gray-800">
-                <h3 class="text-sm font-bold text-gray-400 mb-6">Activity Feed</h3>
+            <div class="searchable-card lg:col-span-2 bg-white dark:bg-gray-900 p-6 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors">
+                <h3 class="text-sm font-bold text-slate-500 dark:text-gray-400 mb-6">Activity Feed</h3>
                 <div class="space-y-6">
                     <div class="flex gap-4">
-                        <div class="w-px bg-gray-700 relative ml-2"><div class="absolute -left-1 w-3 h-3 rounded-full bg-blue-500"></div></div>
-                        <div><p class="text-sm">Terraform Apply concluído</p><p class="text-xs text-gray-500">14:30 - Infraestrutura atualizada</p></div>
+                        <div class="w-px bg-slate-300 dark:bg-gray-700 relative ml-2"><div class="absolute -left-1 w-3 h-3 rounded-full bg-blue-500"></div></div>
+                        <div><p id="feed-msg" class="text-sm font-medium">Sincronizando com a API Gateway...</p><p id="feed-time" class="text-xs text-slate-400 dark:text-gray-500">-</p></div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
-                <h3 class="text-sm font-bold text-gray-400 mb-6">Quick Actions</h3>
+            <div class="searchable-card bg-white dark:bg-gray-900 p-6 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors">
+                <h3 class="text-sm font-bold text-slate-500 dark:text-gray-400 mb-6">Quick Actions</h3>
                 <div class="space-y-3">
-                    <button class="w-full text-left p-3 rounded-lg border border-gray-700 hover:border-blue-500 transition text-sm">🔄 Refresh Infrastructure</button>
-                    <button class="w-full text-left p-3 rounded-lg border border-gray-700 hover:border-blue-500 transition text-sm">🛠️ Terraform Plan</button>
+                    <button onclick="location.reload()" class="w-full text-left p-3 rounded-lg border border-slate-300 dark:border-gray-700 hover:border-blue-500 transition text-sm cursor-pointer">🔄 Refresh Status</button>
+                    <a href="costs.html" class="block w-full text-left p-3 rounded-lg border border-slate-300 dark:border-gray-700 hover:border-blue-500 transition text-sm">💰 Ver Análise de Custos</a>
                 </div>
             </div>
         </div>
     </main>
 </div>
-<!-- Seu script Chart.js permanece igual abaixo -->
+
+<script src="config.js"></script>
+<script>
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const darkIcon = document.getElementById('theme-toggle-dark-icon');
+    const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+    if (localStorage.getItem('color-theme') === 'light') {
+        document.documentElement.classList.remove('dark');
+        darkIcon.classList.remove('hidden');
+    } else {
+        document.documentElement.classList.add('dark');
+        lightIcon.classList.remove('hidden');
+    }
+
+    themeToggleBtn.addEventListener('click', function() {
+        darkIcon.classList.toggle('hidden');
+        lightIcon.classList.toggle('hidden');
+
+        if (document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('color-theme', 'light');
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('color-theme', 'dark');
+        }
+    });
+
+    async function loadDashboardReal() {
+        try {
+            const res = await fetch(`${CONFIG.API_URL}/api/summary`);
+            const data = await res.json();
+            
+            document.getElementById('dash-cost').innerText = `$${parseFloat(data.cost.current).toFixed(2)}`;
+            
+            document.getElementById('api-indicator').className = "w-3 h-3 rounded-full bg-green-500";
+            document.getElementById('api-status').innerText = "Online";
+            document.getElementById('api-status').className = "text-sm font-bold text-green-500";
+
+            document.getElementById('lambda-indicator').className = "w-3 h-3 rounded-full bg-green-500";
+            document.getElementById('lambda-status').innerText = "Active";
+            document.getElementById('lambda-status').className = "text-sm font-bold text-green-500";
+
+            document.getElementById('db-indicator').className = "w-3 h-3 rounded-full bg-green-500";
+            document.getElementById('db-status').innerText = "Connected";
+            document.getElementById('db-status').className = "text-sm font-bold text-green-500";
+
+            document.getElementById('feed-msg').innerText = "Dados atualizados com sucesso da infraestrutura serverless.";
+            document.getElementById('feed-time').innerText = new Date(data.last_update).toLocaleString('pt-BR');
+
+        } catch (e) {
+            document.getElementById('api-indicator').className = "w-3 h-3 rounded-full bg-red-500";
+            document.getElementById('api-status').innerText = "Offline";
+            document.getElementById('api-status').className = "text-sm font-bold text-red-500";
+            
+            document.getElementById('feed-msg').innerText = "Falha ao conectar com o endpoint da API Gateway.";
+            console.error("Erro ao sincronizar dashboard", e);
+        }
+    }
+    loadDashboardReal();
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const cards = document.querySelectorAll('.searchable-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const text = card.innerText.toLowerCase();
+            if (text.includes(term)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        const noResultsDiv = document.getElementById('no-search-results');
+        if (visibleCount === 0 && term.trim() !== '') {
+            document.getElementById('search-term-display').innerText = e.target.value;
+            noResultsDiv.classList.remove('hidden');
+        } else {
+            noResultsDiv.classList.add('hidden');
+        }
+    });
+</script>
 </body>
 </html>
