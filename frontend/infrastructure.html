@@ -84,21 +84,27 @@
 
     async function loadInfra() {
         try {
-            const res = await fetch(`${CONFIG.API_URL}/api/summary`);
+            // Rota corrigida para /summary
+            const res = await fetch(`${CONFIG.API_URL}/summary`);
             const data = await res.json();
-            const dist = data.distribution;
+            const dist = data.distribution || {};
             
             const tbody = document.getElementById('infra-tbody');
             tbody.innerHTML = '';
 
-            let total = dist.ec2 + dist.ecs + dist.rds;
-            document.getElementById('total-resources').innerText = total + 2;
+            // Tratamento defensivo contra valores undefined
+            const ec2Count = dist.ec2 || 0;
+            const ecsCount = dist.ecs || 0;
+            const rdsCount = dist.rds || 0;
+
+            let total = ec2Count + ecsCount + rdsCount + 2; // +2 referentes a Lambda + API Gateway
+            document.getElementById('total-resources').innerText = total;
 
             tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">AWS Lambda (Backend)</td><td>1</td><td><span class="text-green-500">● Active</span></td><td>us-east-1</td></tr>`;
             tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">API Gateway (HTTP)</td><td>1</td><td><span class="text-green-500">● Active</span></td><td>us-east-1</td></tr>`;
-            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">Amazon EC2</td><td>${dist.ec2}</td><td><span class="${dist.ec2 > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${dist.ec2 > 0 ? 'Running' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
-            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">ECS Cluster</td><td>${dist.ecs}</td><td><span class="${dist.ecs > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${dist.ecs > 0 ? 'Active' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
-            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">Amazon RDS</td><td>${dist.rds}</td><td><span class="${dist.rds > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${dist.rds > 0 ? 'Available' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
+            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">Amazon EC2</td><td>${ec2Count}</td><td><span class="${ec2Count > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${ec2Count > 0 ? 'Running' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
+            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">ECS Cluster</td><td>${ecsCount}</td><td><span class="${ecsCount > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${ecsCount > 0 ? 'Active' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
+            tbody.innerHTML += `<tr class="border-b border-slate-200 dark:border-gray-800"><td class="py-4">Amazon RDS</td><td>${rdsCount}</td><td><span class="${rdsCount > 0 ? 'text-green-500' : 'text-slate-400 dark:text-gray-500'}">● ${rdsCount > 0 ? 'Available' : 'Nenhum'}</span></td><td>us-east-1</td></tr>`;
         
             initSearch();
         } catch (e) {

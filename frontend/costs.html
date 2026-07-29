@@ -44,7 +44,7 @@
             <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs">Mês Atual</h3><p id="cost-current" class="text-2xl font-bold text-blue-500">$0.00</p></div>
             <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs">Custo do Dia</h3><p class="text-2xl font-bold">$0.03</p></div>
             <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs">Projeção Final</h3><p id="cost-projection" class="text-2xl font-bold text-yellow-500">$0.00</p></div>
-            <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs">Serviço Principal</h3><p class="text-2xl font-bold text-blue-400">Lambda/Billing</p></div>
+            <div class="searchable-card bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800 transition-colors"><h3 class="text-slate-400 dark:text-gray-400 text-xs">Serviço Principal</h3><p class="text-2xl font-bold text-blue-400">Cost Explorer</p></div>
         </div>
 
         <div id="no-search-results" class="hidden p-6 mb-8 text-center text-slate-400 dark:text-gray-500 italic bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800">
@@ -94,7 +94,7 @@
 
     async function loadCostsData() {
         try {
-            const res = await fetch(`${CONFIG.API_URL}/api/summary`);
+            const res = await fetch(`${CONFIG.API_URL}/summary`);
             const data = await res.json();
             
             document.getElementById('cost-current').innerText = `$${parseFloat(data.cost.current).toFixed(2)}`;
@@ -106,15 +106,18 @@
                 options: { responsive: true, maintainAspectRatio: false } 
             });
 
-            const ec2Count = data.distribution.ec2 || 0;
-            const rdsCount = data.distribution.rds || 0;
-            const ecsCount = data.distribution.ecs || 0;
+            // Extração dinânica das chaves e valores retornados pela Lambda
+            const serviceLabels = data.distribution ? Object.keys(data.distribution) : ['Cost Explorer', 'Secrets Manager', 'ELB/ECS/RDS', 'Taxes'];
+            const serviceValues = data.distribution ? Object.values(data.distribution) : [0.97, 0.37, 0.23, 0.20];
 
             new Chart(document.getElementById('costServiceChart').getContext('2d'), { 
                 type: 'doughnut', 
                 data: { 
-                    labels: ['Serverless/Lambda', 'EC2', 'RDS', 'ECS'], 
-                    datasets: [{ data: [data.cost.current > 0 ? data.cost.current : 1, ec2Count, rdsCount, ecsCount], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#6b7280'] }] 
+                    labels: serviceLabels, 
+                    datasets: [{ 
+                        data: serviceValues, 
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1'] 
+                    }] 
                 }, 
                 options: { 
                     responsive: true, 
