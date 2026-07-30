@@ -28,6 +28,10 @@ O ambiente é composto por:
 - AWS Cost Explorer
 - IAM Least Privilege
 
+<img width="462" height="359" alt="2026-07-30_01-26" src="https://github.com/user-attachments/assets/a6bdbb4a-d089-4429-b27d-a6c885aa8bc5" />
+
+
+
 O projeto simula um portal utilizado por equipes de Cloud Engineering para visualizar informações operacionais da infraestrutura AWS, incluindo consumo de recursos, custos e métricas em tempo real.
 
 ---
