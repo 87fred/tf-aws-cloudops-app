@@ -30,6 +30,18 @@ jobs:
           terraform init
           terraform apply -auto-approve
 
+      # 🚀 NOVO PASSO: Exibe os Outputs no Log e cria o Summary na UI
+      - name: Exibir Outputs do Terraform
+        run: |
+          cd backend
+          echo "### 🚀 Outputs do Deploy" >> $GITHUB_STEP_SUMMARY
+          echo '```hcl' >> $GITHUB_STEP_SUMMARY
+          terraform output >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          # Exibe também direto no console do log
+          terraform output
+
       - name: Deploy Frontend (S3)
         run: |
           cd frontend
