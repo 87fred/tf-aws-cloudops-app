@@ -1,28 +1,43 @@
-name: Destroy CloudOps App
+name: "Terraform Destroy"
 
 on:
-  workflow_dispatch: # Permite disparar manualmente pelo botão no GitHub
+  workflow_dispatch: # Permite disparar manualmente pelo GitHub Actions
 
 jobs:
   destroy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout do Código
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Configurar Credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0 # Ajuste para a versão que você usa
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Configurar Terraform
-        uses: hashicorp/setup-terraform@v2
+      # --- Destruição do Backend / Infra Principal ---
+      - name: Terraform Init (Backend)
+        run: terraform init
+        working-directory: ./backend # Ajuste para o diretório correto do seu projeto
 
-      - name: Destroy Backend (Terraform)
-        run: |
-          cd backend
-          terraform init
-          terraform destroy -var-file="envs/dev.tfvars" -auto-approve
+      - name: Terraform Destroy (Backend)
+        run: terraform destroy -auto-approve
+        working-directory: ./backend
+
+      # --- Se você também tiver o Frontend ou outros módulos separados ---
+      - name: Terraform Init (Frontend)
+        run: terraform init
+        working-directory: ./frontend # Ajuste se houver outra pasta
+        continue-on-error: true
+
+      - name: Terraform Destroy (Frontend)
+        run: terraform destroy -auto-approve
+        working-directory: ./frontend
+        continue-on-error: true
