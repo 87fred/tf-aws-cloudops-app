@@ -76,3 +76,9 @@ module "cloudwatch_monitoring" {
   retention_in_days          = 14
   cloudfront_distribution_id = module.cloudfront.cloudfront_distribution_id
 }
+
+module "ec2" {
+  source       = "./modules/ec2"
+  environment  = "dev"
+  project_name = "aws-cloudops-app"
+}
