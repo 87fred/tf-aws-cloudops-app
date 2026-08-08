@@ -303,4 +303,4 @@ Próximas evoluções previstas:
 
 **Frederico Almeida**
 
-*Cloud Engineer | AWS Certified Solutions Architect – Associate | Terraform | Linux | Serverless | CloudOps*
+*Cloud Engineer | AWS Certified Solutions Architect – Associate | Terraform | Linux |
