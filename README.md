@@ -50,31 +50,58 @@ Os principais pilares da solução são:
 
 ---
 
-# 🏗️ Arquitetura do Sistema
+## 🏗️ Arquitetura do Sistema
+
+A aplicação utiliza uma arquitetura **serverless e orientada a serviços AWS**, separando a camada de apresentação, processamento, persistência, análise de custos e observabilidade.
+
+O fluxo principal da aplicação ocorre da seguinte forma:
+
+1. O **usuário** acessa a aplicação através do **Amazon CloudFront**.
+2. O **CloudFront** distribui o frontend hospedado no **Amazon S3**.
+3. O **Frontend** realiza chamadas ao **Amazon API Gateway**.
+4. O **API Gateway** encaminha as requisições para funções **AWS Lambda**.
+5. As funções Lambda processam as informações e interagem com:
+   - **Amazon DynamoDB** para persistência de dados;
+   - **AWS Cost Explorer** para obtenção de informações relacionadas a custos;
+   - **Amazon CloudWatch** para métricas e observabilidade.
+6. As informações coletadas pelo **CloudWatch** são utilizadas para alimentar os **Dashboards** da aplicação.
+
+### Diagrama de Arquitetura
 
 ```mermaid
-graph TD
+flowchart TD
 
-User((Usuário))
+%% Definição de Cores e Estilos para o Fundo Branco
+classDef user fill:#F2F3F5,stroke:#545B64,stroke-width:2px,color:#111111;
+classDef aws fill:#FFFFFF,stroke:#232F3E,stroke-width:2px,color:#232F3E,font-weight:bold;
+classDef infra fill:#FFFFFF,stroke:#FF9900,stroke-width:2px,color:#232F3E;
 
-User --> CF[Amazon CloudFront]
+%% Definição dos Nós
+Usuario["👤 Usuário"]:::user
+CloudFront["🌐 Amazon CloudFront"]:::aws
+S3["🪣 Amazon S3"]:::aws
+Frontend["💻 Frontend"]:::user
+APIGateway["⚡ Amazon API Gateway"]:::aws
+Lambda["λ AWS Lambda"]:::aws
+DynamoDB[("🗄️ Amazon DynamoDB")]:::aws
+CostExplorer["📊 AWS Cost Explorer"]:::infra
+CloudWatch["📈 Amazon CloudWatch"]:::infra
+Dashboards["📋 Dashboards"]:::user
 
-CF --> S3[Amazon S3]
+%% Fluxo Principal
+Usuario --> CloudFront
+CloudFront --> S3
+S3 --> Frontend
+Frontend --> APIGateway
+APIGateway --> Lambda
 
-S3 --> Browser[Frontend]
+%% Processamento e Integrações
+Lambda --> DynamoDB
+Lambda --> CostExplorer
+Lambda --> CloudWatch
 
-Browser --> API[Amazon API Gateway]
-
-API --> Lambda[AWS Lambda]
-
-Lambda --> Dynamo[(Amazon DynamoDB)]
-
-Lambda --> Cost[Cost Explorer]
-
-Lambda --> CW[Amazon CloudWatch]
-
-CW --> Dashboard[Dashboards]
-```
+%% Monitoramento
+CloudWatch --> Dashboards
 
 ---
 
