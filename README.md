@@ -469,4 +469,4 @@ terraform output
 
 **Frederico Almeida**
 
-*Cloud Engineer | AWS Certified Solutions Architect – Associate | IaC
+*Cloud Engineer | AWS Certified Solutions Architect – Associate | IaC |
