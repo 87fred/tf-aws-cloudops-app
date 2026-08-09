@@ -464,27 +464,9 @@ terraform output
 
 ---
 
-# 🚀 Roadmap
-
-Próximas evoluções planejadas para o projeto:
-
-* [ ] Autenticação avançada com Amazon Cognito
-* [ ] Proteção de borda com AWS WAF
-* [ ] Rastreamento distribuído com AWS X-Ray
-* [ ] Orquestração de eventos com Amazon EventBridge
-* [ ] Notificações utilizando Amazon SNS
-* [ ] Exportação de relatórios gerenciais em PDF
-* [ ] Suporte a arquitetura Multi-Region
-* [ ] Pipeline de CI/CD com GitHub Actions
-* [ ] Testes automatizados de infraestrutura
-* [ ] Integração com AWS Organizations
-* [ ] Automação de políticas de governança
-* [ ] Evolução do inventário para múltiplas contas AWS
-
----
 
 # 👨‍💻 Autor
 
 **Frederico Almeida**
 
-*Cloud Engineer | AWS Certified Solutions Architect – Associate | Terraform | Linux | Serverless*
+*Cloud Engineer | AWS Certified Solutions Architect – Associate | IaC
