@@ -1,143 +1,53 @@
-#Configuração de alarme de métrica para monitorar erros na função Lambda
-resource "aws_cloudwatch_metric_alarm" "lambda_erros" {
-  alarm_name          = "/${var.lambda_function_name}-erros-alarm"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "Errors"
-  namespace           = "AWS/lambda"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarme disparado se a funcao Lambda registrar 1 ou mais erros no periodo."
-
-  # Associa o alarme diretamente à Lambda através das dimensões do CloudWatch
-  dimensions = {
-    FunctionName = var.lambda_function_name
-  }
-
-}
-
-#1. Dashboard de Aplicação e Performance - Lambda
+# --- 1. Dashboard de Aplicação e Performance - Lambda ---
 resource "aws_cloudwatch_dashboard" "lambda_dashboard" {
   dashboard_name = "${var.project_name}-lambda-performance-dashboard"
 
   dashboard_body = jsonencode({
     widgets = [
       {
-        type   = "metric"
-        x      = 0
-        y      = 0
-        width  = 12
-        height = 6
+        type = "metric", x = 0, y = 0, width = 12, height = 6,
         properties = {
-          metrics = [
-            ["AWS/Lambda", "Errors", "FunctionName", var.lambda_function_name],
-            [".", "Invocations", ".", "."]
-          ],
-          view    = "timeSeries"
-          stacked = false
-          region  = "us-east-1"
-          title   = "Erros e Chamadas - Lambda"
-          period  = 60
+          metrics = [[
+            {
+              expression = "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Errors\" FunctionName^=\"${var.project_name}\"', 'Sum', 60)",
+              label      = "Erros Totais (Projeto)", id = "e1"
+            }
+          ]],
+          view = "timeSeries", stacked = false, region = "us-east-1", title = "Erros Totais (Todos os recursos do projeto)", period = 60, stat = "Sum"
         }
       },
       {
-        type   = "metric"
-        x      = 12
-        y      = 0
-        width  = 12
-        height = 6
+        type = "metric", x = 12, y = 0, width = 12, height = 6,
         properties = {
-          metrics = [
-            ["AWS/Lambda", "Duração", "FunctionName", var.lambda_function_name]
-          ],
-          view    = "timeSeries"
-          stacked = false
-          region  = "us-east-1"
-          title   = "Latência - Lambda (Duração)"
-          period  = 60
-          stat    = "Average"
+          metrics = [[
+            {
+              expression = "SEARCH('{AWS/Lambda,FunctionName} MetricName=\"Duration\" FunctionName^=\"${var.project_name}\"', 'Average', 60)",
+              label      = "Latência Média (Projeto)", id = "e2"
+            }
+          ]],
+          view = "timeSeries", stacked = false, region = "us-east-1", title = "Latência Média (Todos os recursos do projeto)", period = 60, stat = "Average"
         }
       }
     ]
   })
 }
 
-# -----------------------------------------------------------------------------
-# 2. Dashboard de Infraestrutura e Conectividade (CloudFront)
-# -----------------------------------------------------------------------------
+# --- 2. Dashboard de Infraestrutura e Conectividade (CloudFront) ---
 resource "aws_cloudwatch_dashboard" "edge_dashboard" {
   dashboard_name = "${var.project_name}-edge-infrastructure-dashboard"
 
   dashboard_body = jsonencode({
     widgets = [
       {
-        type   = "metric"
-        x      = 0
-        y      = 0
-        width  = 12
-        height = 6
+        type = "metric", x = 0, y = 0, width = 12, height = 6,
         properties = {
-          metrics = [
-            ["AWS/CloudFront", "Requisições", "DistributionId", var.cloudfront_distribution_id],
-            [".", "Download", ".", "."],
-            [".", "Upload", ".", "."]
-          ],
-          view    = "timeSeries"
-          stacked = false
-          region  = "us-east-1"
-          title   = "Requisições e Tráfego - CloudFront"
-          period  = 300
-        }
-      },
-      {
-        type   = "metric"
-        x      = 12
-        y      = 0
-        width  = 12
-        height = 6
-        properties = {
-          metrics = [
-            ["AWS/CloudFront", "Taxa de Erros Totais", "DistributionId", var.cloudfront_distribution_id],
-            [".", "Erros 5xx", ".", "."],
-            [".", "Erros 4xx", ".", "."]
-          ],
-          view    = "timeSeries"
-          stacked = false
-          region  = "us-east-1"
-          title   = "Taxa de Erros HTTP (4xx / 5xx) - Borda"
-          period  = 300
-          stat    = "Average"
-        }
-      }
-    ]
-  })
-}
-
-# -----------------------------------------------------------------------------
-# 3. Dashboard de FinOps e Custos (AWS Billing)
-# -----------------------------------------------------------------------------
-resource "aws_cloudwatch_dashboard" "finops_dashboard" {
-  dashboard_name = "${var.project_name}-finops-costs-dashboard"
-
-  dashboard_body = jsonencode({
-    widgets = [
-      {
-        type   = "metric"
-        x      = 0
-        y      = 0
-        width  = 24
-        height = 6
-        properties = {
-          metrics = [
-            ["AWS/Billing", "Custos Estimados", "Currency", "USD"]
-          ],
-          view    = "timeSeries"
-          stacked = false
-          region  = "us-east-1" # Nota: Métricas de Billing na AWS ficam obrigatoriamente em us-east-1
-          title   = "Custo Estimado Consolidado (USD)"
-          period  = 21600
-          stat    = "Maximum"
+          metrics = [[
+            {
+              expression = "SEARCH('{AWS/CloudFront,DistributionId} MetricName=\"Requests\"', 'Sum', 300)",
+              label      = "Requisições Totais (Global)", id = "e3"
+            }
+          ]],
+          view = "timeSeries", stacked = false, region = "us-east-1", title = "Requisições Globais (Toda a conta)", period = 300
         }
       }
     ]

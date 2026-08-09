@@ -6,6 +6,9 @@ import datetime
 from urllib.parse import parse_qs
 
 def lambda_handler(event, context):
+    # Log de diagnóstico para capturar exatamente o que chega do API Gateway
+    print("EVENTO RECEBIDO:", json.dumps(event))
+
     headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
@@ -48,7 +51,8 @@ def lambda_handler(event, context):
         def hash_password(password_str):
             return hashlib.sha256(password_str.encode()).hexdigest()
 
-        if 'register' in path and method == 'POST':
+        # ======== 1. ROTA DE CADASTRO ========
+        if 'register' in path.lower() and method == 'POST':
             if not username or not password:
                 return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "E-mail e senha obrigatórios."})}
             
@@ -59,7 +63,8 @@ def lambda_handler(event, context):
             table.put_item(Item={'username': username, 'password_hash': hash_password(password)})
             return {"statusCode": 201, "headers": headers, "body": json.dumps({"message": "Usuário cadastrado com sucesso!"})}
 
-        if 'login' in path and method == 'POST':
+        # ======== 2. ROTA DE LOGIN ========
+        if 'login' in path.lower() and method == 'POST':
             if not username or not password:
                 return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "E-mail e senha obrigatórios."})}
             
@@ -69,7 +74,40 @@ def lambda_handler(event, context):
             
             return {"statusCode": 200, "headers": headers, "body": json.dumps({"token": "cloudops_secure_token_abc123", "username": username})}
 
-        if 'summary' in path and method == 'GET':
+        # ======== 3. NOVO MOTOR DE DESCOBERTA (RECURSOS) ========
+        if 'resources' in path.lower() and method == 'GET':
+            try:
+                tagging_client = boto3.client('resourcegroupstaggingapi', region_name='us-east-1')
+                
+                # Procura por TUDO na AWS que tenha a Tag "CloudOps" igual a "true"
+                response = tagging_client.get_resources(
+                    TagFilters=[
+                        {'Key': 'CloudOps', 'Values': ['true']}
+                    ]
+                )
+                
+                discovered_resources = []
+                for resource in response.get('ResourceTagMappingList', []):
+                    arn = resource.get('ResourceARN')
+                    # Extrai o serviço do ARN (ex: sqs, s3, dynamodb, lambda)
+                    service = arn.split(':')[2].upper() 
+                    # Tenta pegar o nome final do recurso
+                    resource_name = arn.split(':')[-1].split('/')[-1] 
+                    
+                    discovered_resources.append({
+                        "arn": arn,
+                        "service": service,
+                        "name": resource_name
+                    })
+                    
+                return {"statusCode": 200, "headers": headers, "body": json.dumps({"resources": discovered_resources})}
+                
+            except Exception as e:
+                print(f"Erro no resource tagger: {e}")
+                return {"statusCode": 500, "headers": headers, "body": json.dumps({"error": f"Erro ao buscar recursos: {str(e)}"})}
+
+        # ======== 4. ROTA DE CUSTOS (FINOPS - MANTIDA INTACTA) ========
+        if 'summary' in path.lower() and method == 'GET':
             current_cost = 1.78
             projection = 2.14
             
