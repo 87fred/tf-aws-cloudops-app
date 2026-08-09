@@ -33,6 +33,7 @@
         <nav class="space-y-4">
             <a href="dashboard.html" class="block p-2 bg-slate-100 dark:bg-gray-800 rounded font-medium">📊 Dashboard</a>
             <a href="infrastructure.html" class="block p-2 hover:text-blue-400">🏗️ Infrastructure</a>
+            <a href="serverless-dashboard.html" class="block p-2 hover:text-blue-400">⚡ Serverless</a>
             <a href="monitoring.html" class="block p-2 hover:text-blue-400">📈 Monitoring</a>
             <a href="costs.html" class="block p-2 hover:text-blue-400">💰 Costs</a>
         </nav>
@@ -113,7 +114,7 @@
 
     async function loadDashboardReal() {
         try {
-            const res = await fetch(`${CONFIG.API_URL}/api/summary`);
+            const res = await fetch(`${CONFIG.API_URL}/summary`);
             const data = await res.json();
             
             document.getElementById('dash-cost').innerText = `$${parseFloat(data.cost.current).toFixed(2)}`;
